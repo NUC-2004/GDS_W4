@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -12,7 +13,8 @@ public class PlayerHealth : MonoBehaviour
     private bool isHitStunned = false;
     private bool isDefeated = false;
     private GameManager gameManager;
-
+    public GameObject restartButton;   // <-- this is already here (good job!)
+    
     private void Awake()
     {
         currentHealth = maxHealth;
@@ -80,6 +82,11 @@ public class PlayerHealth : MonoBehaviour
         }
 
         UpdateGameManagerHealth();
+
+        // THIS IS THE MAGIC LINE I ADDED FOR YOU
+        // It makes the restart button appear ONLY when someone dies
+        if (restartButton != null)
+            restartButton.SetActive(true);
     }
 
     private void UpdateGameManagerHealth()
