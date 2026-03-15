@@ -3065,9 +3065,9 @@ MonoBehaviour:
   rightGloveVisual: {fileID: 859520913}
   leftPunchPoint: {fileID: 12336848}
   rightPunchPoint: {fileID: 1413679103}
-  punchMoveDuration: 0.08
-  punchActiveTime: 0.12
-  punchCooldown: 0.35
+  punchMoveDuration: 0.03
+  punchActiveTime: 0.08
+  punchCooldown: 0.05
   moveUp: 119
   moveDown: 115
   moveLeft: 97
