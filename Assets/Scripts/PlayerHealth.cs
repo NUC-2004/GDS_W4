@@ -11,12 +11,14 @@ public class PlayerHealth : MonoBehaviour
     private SpriteRenderer sr;
     private bool isHitStunned = false;
     private bool isDefeated = false;
+    private GameManager gameManager;
 
     private void Awake()
     {
         currentHealth = maxHealth;
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
+        gameManager = FindFirstObjectByType<GameManager>();
     }
 
     public void TakeDamage(float damageAmount, Vector2 hitDirection, float knockbackForce)
@@ -32,6 +34,8 @@ public class PlayerHealth : MonoBehaviour
         {
             currentHealth = 0f;
         }
+
+        UpdateGameManagerHealth();
 
         if (rb != null)
         {
@@ -75,6 +79,21 @@ public class PlayerHealth : MonoBehaviour
             sr.color = Color.gray;
         }
 
+        UpdateGameManagerHealth();
+    }
+
+    private void UpdateGameManagerHealth()
+    {
+        if (gameManager == null) return;
+
+        if (gameObject.name == "Player1")
+        {
+            gameManager.SetPlayer1Health(Mathf.RoundToInt(currentHealth));
+        }
+        else if (gameObject.name == "Player2")
+        {
+            gameManager.SetPlayer2Health(Mathf.RoundToInt(currentHealth));
+        }
     }
 
     public bool IsHitStunned()
