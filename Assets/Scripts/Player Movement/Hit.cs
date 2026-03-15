@@ -4,13 +4,13 @@ public class PunchHitbox : MonoBehaviour
 {
     public float damage = 10f;
     public float knockbackForce = 5f;
-    public bool canHit = true;
+    public bool canHit = false;
+    public bool hasHitThisPunch = false;
 
-    private bool hasHitThisPunch = false;
-
-    private void OnEnable()
+    public void ResetHit()
     {
         hasHitThisPunch = false;
+        canHit = false;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -29,7 +29,6 @@ public class PunchHitbox : MonoBehaviour
         if (other.CompareTag("Face"))
         {
             PlayerHealth targetHealth = other.GetComponentInParent<PlayerHealth>();
-
             if (targetHealth != null)
             {
                 Vector2 hitDirection = (targetHealth.transform.position - transform.position).normalized;

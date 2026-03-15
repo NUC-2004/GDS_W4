@@ -32,6 +32,10 @@ public class PlayerController2D : MonoBehaviour
     public KeyCode leftPunchKey;
     public KeyCode rightPunchKey;
 
+    [Header("Grenade")]
+    public KeyCode pickUpGrenadeKey;
+    public KeyCode throwGrenadeKey;
+
     [Header("Facing")]
     public Vector2 initialFacing = Vector2.right;
     public bool invertLeftRightFacing = false;
@@ -39,6 +43,7 @@ public class PlayerController2D : MonoBehaviour
     private Vector2 moveInput;
     private Vector2 facingDirection;
     private bool canPunch = true;
+    private Grenade heldGrenade = null;
 
     private PlayerHealth playerHealth;
 
@@ -73,6 +78,7 @@ public class PlayerController2D : MonoBehaviour
         HandleInput();
         HandleFacingByMovement();
         HandlePunchInput();
+        HandleGrenadeInput();
     }
 
     private void FixedUpdate()
@@ -167,12 +173,56 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
+    private void HandleGrenadeInput()
+    {
+        if (Input.GetKeyDown(pickUpGrenadeKey))
+        {
+            TryPickUpGrenade();
+        }
+
+        if (Input.GetKeyDown(throwGrenadeKey))
+        {
+            ThrowGrenade();
+        }
+    }
+
+    private void TryPickUpGrenade()
+    {
+        if (heldGrenade != null) return;
+
+        Collider2D[] nearby = Physics2D.OverlapCircleAll(transform.position, 1f);
+
+        foreach (Collider2D col in nearby)
+        {
+            GrenadePickupTrigger trigger = col.GetComponent<GrenadePickupTrigger>();
+            if (trigger != null)
+            {
+                bool picked = trigger.TryPickUp(this);
+                if (picked)
+                {
+                    heldGrenade = trigger.grenade;
+                    break;
+                }
+            }
+        }
+    }
+
+    private void ThrowGrenade()
+    {
+        if (heldGrenade == null) return;
+
+        Vector2 throwDir = facingDirection;
+        heldGrenade.Throw(throwDir);
+        heldGrenade = null;
+    }
+
     private IEnumerator DoPunch(PunchHitbox punchHitbox, Transform gloveVisual, Transform punchPoint, bool isLeftPunch)
     {
         canPunch = false;
 
         if (punchHitbox != null)
         {
+            punchHitbox.ResetHit();
             punchHitbox.canHit = true;
         }
 

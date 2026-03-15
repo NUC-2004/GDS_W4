@@ -23,10 +23,14 @@ public class GameManager : MonoBehaviour
 
     [Header("UI")]
     public GameObject gameOverPanel;
+    public GameObject pausePanel;
     public TextMeshProUGUI resultText;
     public TextMeshProUGUI timerText;
+    public Slider player1HealthBar;
+    public Slider player2HealthBar;
 
     private bool gameEnded = false;
+    private bool isPaused = false;
 
     void Start()
     {
@@ -37,16 +41,51 @@ public class GameManager : MonoBehaviour
             gameOverPanel.SetActive(false);
         }
 
+        if (pausePanel != null)
+        {
+            pausePanel.SetActive(false);
+        }
+
+        if (player1HealthBar != null)
+        {
+            player1HealthBar.maxValue = player1Health;
+            player1HealthBar.value = player1Health;
+        }
+
+        if (player2HealthBar != null)
+        {
+            player2HealthBar.maxValue = player2Health;
+            player2HealthBar.value = player2Health;
+        }
+
         UpdateTimerUI();
     }
 
     void Update()
     {
-        if (gameEnded) return;
+        if (Input.GetKeyDown(KeyCode.F10))
+        {
+            TogglePause();
+        }
+
+        if (gameEnded || isPaused) return;
 
         CheckRingOut();
         CheckHealthWin();
         UpdateTimer();
+    }
+
+    public void TogglePause()
+    {
+        if (gameEnded) return;
+
+        isPaused = !isPaused;
+        Time.timeScale = isPaused ? 0f : 1f;
+
+        if (pausePanel != null)
+        {
+            pausePanel.SetActive(isPaused);
+        }
     }
 
     void CheckRingOut()
@@ -125,8 +164,14 @@ public class GameManager : MonoBehaviour
     public void EndGame(string message)
     {
         if (gameEnded) return;
-
         gameEnded = true;
+        isPaused = false;
+        Time.timeScale = 1f;
+
+        if (pausePanel != null)
+        {
+            pausePanel.SetActive(false);
+        }
 
         if (gameOverPanel != null)
         {
@@ -156,10 +201,20 @@ public class GameManager : MonoBehaviour
     public void SetPlayer1Health(int value)
     {
         player1Health = value;
+
+        if (player1HealthBar != null)
+        {
+            player1HealthBar.value = value;
+        }
     }
 
     public void SetPlayer2Health(int value)
     {
         player2Health = value;
+
+        if (player2HealthBar != null)
+        {
+            player2HealthBar.value = value;
+        }
     }
 }
