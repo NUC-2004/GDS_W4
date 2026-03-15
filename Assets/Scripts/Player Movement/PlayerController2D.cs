@@ -11,7 +11,16 @@ public class PlayerController2D : MonoBehaviour
     public PunchHitbox leftPunchHitbox;
     public PunchHitbox rightPunchHitbox;
 
+    [Header("Punch Visuals")]
+    public Transform leftGloveVisual;
+    public Transform rightGloveVisual;
+
+    [Header("Punch Target Points")]
+    public Transform leftPunchPoint;
+    public Transform rightPunchPoint;
+
     [Header("Punch Timing")]
+    public float punchMoveDuration = 0.08f;
     public float punchActiveTime = 0.12f;
     public float punchCooldown = 0.35f;
 
@@ -33,7 +42,10 @@ public class PlayerController2D : MonoBehaviour
 
     private PlayerHealth playerHealth;
 
-    void Awake()
+    private Vector3 leftGloveStartLocalPos;
+    private Vector3 rightGloveStartLocalPos;
+
+    private void Awake()
     {
         if (rb == null)
         {
@@ -42,24 +54,33 @@ public class PlayerController2D : MonoBehaviour
 
         playerHealth = GetComponent<PlayerHealth>();
 
-        // 设置初始面向
         facingDirection = initialFacing.normalized;
         ApplyFacingVisual();
+
+        if (leftGloveVisual != null)
+        {
+            leftGloveStartLocalPos = leftGloveVisual.localPosition;
+        }
+
+        if (rightGloveVisual != null)
+        {
+            rightGloveStartLocalPos = rightGloveVisual.localPosition;
+        }
     }
 
-    void Update()
+    private void Update()
     {
         HandleInput();
         HandleFacingByMovement();
         HandlePunchInput();
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         HandleMovement();
     }
 
-    void HandleInput()
+    private void HandleInput()
     {
         float x = 0f;
         float y = 0f;
@@ -72,7 +93,7 @@ public class PlayerController2D : MonoBehaviour
         moveInput = new Vector2(x, y).normalized;
     }
 
-    void HandleMovement()
+    private void HandleMovement()
     {
         if (playerHealth != null && playerHealth.IsDefeated())
         {
@@ -82,7 +103,7 @@ public class PlayerController2D : MonoBehaviour
         rb.MovePosition(rb.position + moveInput * moveSpeed * Time.fixedDeltaTime);
     }
 
-    void HandleFacingByMovement()
+    private void HandleFacingByMovement()
     {
         if (moveInput == Vector2.zero)
         {
@@ -93,7 +114,7 @@ public class PlayerController2D : MonoBehaviour
         ApplyFacingVisual();
     }
 
-    void ApplyFacingVisual()
+    private void ApplyFacingVisual()
     {
         Vector3 scale = transform.localScale;
         float absX = Mathf.Abs(scale.x);
@@ -124,7 +145,7 @@ public class PlayerController2D : MonoBehaviour
         transform.localScale = scale;
     }
 
-    void HandlePunchInput()
+    private void HandlePunchInput()
     {
         if (!canPunch)
         {
@@ -138,15 +159,15 @@ public class PlayerController2D : MonoBehaviour
 
         if (Input.GetKeyDown(leftPunchKey))
         {
-            StartCoroutine(DoPunch(leftPunchHitbox));
+            StartCoroutine(DoPunch(leftPunchHitbox, leftGloveVisual, leftPunchPoint, true));
         }
         else if (Input.GetKeyDown(rightPunchKey))
         {
-            StartCoroutine(DoPunch(rightPunchHitbox));
+            StartCoroutine(DoPunch(rightPunchHitbox, rightGloveVisual, rightPunchPoint, false));
         }
     }
 
-    IEnumerator DoPunch(PunchHitbox punchHitbox)
+    private IEnumerator DoPunch(PunchHitbox punchHitbox, Transform gloveVisual, Transform punchPoint, bool isLeftPunch)
     {
         canPunch = false;
 
@@ -155,7 +176,14 @@ public class PlayerController2D : MonoBehaviour
             punchHitbox.canHit = true;
         }
 
-        yield return new WaitForSeconds(punchActiveTime);
+        if (gloveVisual != null && punchPoint != null)
+        {
+            yield return StartCoroutine(AnimatePunchToPoint(gloveVisual, punchPoint));
+        }
+        else
+        {
+            yield return new WaitForSeconds(punchMoveDuration * 2f);
+        }
 
         if (punchHitbox != null)
         {
@@ -165,5 +193,36 @@ public class PlayerController2D : MonoBehaviour
         yield return new WaitForSeconds(punchCooldown);
 
         canPunch = true;
+    }
+
+    private IEnumerator AnimatePunchToPoint(Transform gloveVisual, Transform punchPoint)
+    {
+        Vector3 startLocalPos = gloveVisual.localPosition;
+        Vector3 targetWorldPos = punchPoint.position;
+        Vector3 targetLocalPos = gloveVisual.parent.InverseTransformPoint(targetWorldPos);
+
+        float timer = 0f;
+
+        while (timer < punchMoveDuration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / punchMoveDuration;
+            gloveVisual.localPosition = Vector3.Lerp(startLocalPos, targetLocalPos, t);
+            yield return null;
+        }
+
+        gloveVisual.localPosition = targetLocalPos;
+
+        timer = 0f;
+
+        while (timer < punchMoveDuration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / punchMoveDuration;
+            gloveVisual.localPosition = Vector3.Lerp(targetLocalPos, startLocalPos, t);
+            yield return null;
+        }
+
+        gloveVisual.localPosition = startLocalPos;
     }
 }
